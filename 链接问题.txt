@@ -1,0 +1,26 @@
+# 问题描述
+在make之后的步骤里面,linking时会出现问题.
+Linking CXX executable bin/dso_dataset
+lib/libdso.a(KeyFrameDisplay.cpp.o): In function `pcl::PCDWriter::write(std::string const&, pcl::PCLPointCloud2 const&, Eigen::Matrix<float, 4, 1, 0, 4, 1> const&, Eigen::Quaternion<float, 0> const&, bool)':
+/usr/include/pcl-1.7/pcl/io/pcd_io.h:353: undefined reference to `pcl::PCDWriter::writeASCII(std::string const&, pcl::PCLPointCloud2 const&, Eigen::Matrix<float, 4, 1, 0, 4, 1> const&, Eigen::Quaternion<float, 0> const&, int)'
+/usr/include/pcl-1.7/pcl/io/pcd_io.h:351: undefined reference to `pcl::PCDWriter::writeBinary(std::string const&, pcl::PCLPointCloud2 const&, Eigen::Matrix<float, 4, 1, 0, 4, 1> const&, Eigen::Quaternion<float, 0> const&)'
+lib/libdso.a(KeyFrameDisplay.cpp.o): In function `int pcl::PCDWriter::writeBinary<pcl::PointXYZRGBA>(std::string const&, pcl::PointCloud<pcl::PointXYZRGBA> const&)':
+/usr/include/pcl-1.7/pcl/io/impl/pcd_io.hpp:157: undefined reference to `pcl::PCDWriter::setLockingPermissions(std::string const&, boost::interprocess::file_lock&)'
+/usr/include/pcl-1.7/pcl/io/impl/pcd_io.hpp:258: undefined reference to `pcl::PCDWriter::resetLockingPermissions(std::string const&, boost::interprocess::file_lock&)'
+/usr/include/pcl-1.7/pcl/io/impl/pcd_io.hpp:193: undefined reference to `pcl::PCDWriter::resetLockingPermissions(std::string const&, boost::interprocess::file_lock&)'
+/usr/include/pcl-1.7/pcl/io/impl/pcd_io.hpp:204: undefined reference to `pcl::PCDWriter::resetLockingPermissions(std::string const&, boost::interprocess::file_lock&)'
+/usr/include/pcl-1.7/pcl/io/impl/pcd_io.hpp:213: undefined reference to `pcl::PCDWriter::resetLockingPermissions(std::string const&, boost::interprocess::file_lock&)'
+/usr/include/pcl-1.7/pcl/io/impl/pcd_io.hpp:247: undefined reference to `pcl::PCDWriter::resetLockingPermissions(std::string const&, boost::interprocess::file_lock&)'
+collect2: error: ld returned 1 exit status
+make[2]: *** [bin/dso_dataset] Error 1
+make[1]: *** [CMakeFiles/dso_dataset.dir/all] Error 2
+make: *** [all] Error 2
+
+# 原因猜想
+由于问题出现在链接的过程中,并不是出现在编译的过程中,所以代码本身是正确的编译的.
+出现问题是因为缺少其他的需要的文件.所以缺少的是.o或者.so的文件.
+根据报错的内容,是因为找不到pcl相关文件,所以找不到的文件应该是Pcl的库文件的.so
+加入使用了的两个文件路径在cmake文件以后,可以正常编译.
+
+# 解决方式
+在CMAKELIST文件中的target_link_libraries里面,添加了pcl使用的common和io两个库的路径"/usr/lib/libpcl_common.so" "/usr/lib/libpcl_io.so"
